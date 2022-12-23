@@ -87,7 +87,7 @@ const Options: NextPage = () => {
             <select
               aria-label="Todoist Project"
               id="options.project"
-              className="rounded-lg bg-transparent font-mono text-xl outline-none"
+              className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
             >
@@ -112,7 +112,7 @@ const Options: NextPage = () => {
             <select
               aria-label="Todoist Project"
               id="options.project"
-              className="rounded-lg bg-transparent font-mono text-xl outline-none"
+              className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
               value={sectionId}
               onChange={(e) => setSectionId(e.target.value)}
               disabled={!projectId || !sections[projectId]}
