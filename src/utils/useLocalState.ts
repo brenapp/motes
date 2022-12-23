@@ -8,7 +8,11 @@ export function useLocalStorage<T>(identifier: string, initial: T): [T, Dispatch
     useEffect(() => {
         const value = localStorage.getItem(identifier);
         if (value) {
-            setState(JSON.parse(value));
+            try {
+                setState(JSON.parse(value));
+            } catch (e) {
+                console.error(`Failed to parse local storage value for ${identifier}`);
+            }
         }
         setHydrated(true);
     }, [identifier]);
@@ -30,7 +34,11 @@ export function useSessionStorage<T>(identifier: string, initial: T): [T, Dispat
     useEffect(() => {
         const value = sessionStorage.getItem(identifier);
         if (value) {
-            setState(JSON.parse(value));
+            try {
+                setState(JSON.parse(value));
+            } catch (e) {
+                console.error(`Failed to parse session storage value for ${identifier}`);
+            }
         }
         setHydrated(true);
     }, [identifier]);

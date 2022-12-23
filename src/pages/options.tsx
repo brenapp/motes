@@ -11,13 +11,13 @@ import {
 
 const Options: NextPage = () => {
   const [apiKey, setApiKey] = useLocalStorage<string>("options.apiKey", "");
-  const [projectId, setProjectId] = useLocalStorage<string>(
+  const [projectId, setProjectId] = useLocalStorage<string | undefined>(
     "options.projectId",
-    ""
+    undefined
   );
-  const [sectionId, setSectionId] = useLocalStorage<string>(
+  const [sectionId, setSectionId] = useLocalStorage<string | undefined>(
     "options.sectionId",
-    ""
+    undefined
   );
 
   const api = useMemo(() => {
@@ -103,32 +103,34 @@ const Options: NextPage = () => {
               project.
             </label>
           </section>
-          <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
-            <h1 className="text-lg">Todoist Section</h1>
-            <select
-              aria-label="Todoist Project"
-              id="options.project"
-              className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
-              value={sectionId}
-              onChange={(e) => setSectionId(e.target.value)}
-              disabled={!projectId || !sections[projectId]}
-            >
-              {sections[projectId]?.map((project) => (
-                <option
-                  value={project.id}
-                  label={project.name}
-                  key={project.id}
-                />
-              ))}
-            </select>
-            <label
-              htmlFor="options.project"
-              className="right-4 text-sm text-white/50"
-            >
-              When tasks are sent to Todoist, they will be added to this
-              project.
-            </label>
-          </section>
+          {projectId && (
+            <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+              <h1 className="text-lg">Todoist Section</h1>
+              <select
+                aria-label="Todoist Project"
+                id="options.project"
+                className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
+                value={sectionId}
+                onChange={(e) => setSectionId(e.target.value)}
+                disabled={!projectId || !sections[projectId]}
+              >
+                {sections[projectId]?.map((project) => (
+                  <option
+                    value={project.id}
+                    label={project.name}
+                    key={project.id}
+                  />
+                ))}
+              </select>
+              <label
+                htmlFor="options.project"
+                className="right-4 text-sm text-white/50"
+              >
+                When tasks are sent to Todoist, they will be added to this
+                project.
+              </label>
+            </section>
+          )}
           <section className="w-full">
             <Link
               href="/"
