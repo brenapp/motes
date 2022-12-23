@@ -1,6 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalStorage, useSessionStorage } from "../utils/useLocalState";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -14,7 +14,8 @@ type Note = {
 };
 
 const Home: NextPage = () => {
-  const input = useRef<HTMLInputElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const [note, setNote] = useState<string>("");
   const noteContainers = useRef<Record<string, HTMLDivElement | null>>({});
   const router = useRouter();
 
@@ -42,7 +43,7 @@ const Home: NextPage = () => {
         input.current?.focus();
       }
 
-      if (event.key === "," && event.ctrlKey) {
+      if (event.key === "," && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         router.push("/options");
       }
@@ -52,21 +53,79 @@ const Home: NextPage = () => {
     return () => window.removeEventListener("keydown", onKeyPress);
   }, [router]);
 
-  function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  useEffect(() => {
+    input.current!.style.height = "0px";
+    const scrollHeight = input.current!.scrollHeight;
+    input.current!.style.height = scrollHeight + "px";
+  }, [note]);
+
+  function onInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     event.stopPropagation();
-    if (event.key === "Enter" && event.currentTarget.value) {
+
+    if (
+      event.key === "Enter" &&
+      event.currentTarget.value &&
+      (event.metaKey || event.ctrlKey)
+    ) {
+      event.preventDefault();
       const contents = event.currentTarget.value;
-      setNodes((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(36).slice(2, 9),
-          contents,
-          createdAt: Date.now(),
-          sentToTodoist: false,
-        },
-      ]);
-      event.currentTarget.value = "";
+      onNoteAdd(contents);
+      setNote("");
     }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const firstNote = notes[0];
+      if (firstNote) {
+        noteContainers.current[firstNote.id]?.focus();
+      }
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const lastNote = notes[notes.length - 1];
+      if (lastNote) {
+        noteContainers.current[lastNote.id]?.focus();
+      }
+    }
+  }
+
+  function onNoteAdd(contents: string) {
+    setNodes((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(36).slice(2, 9),
+        contents,
+        createdAt: Date.now(),
+        sentToTodoist: false,
+      },
+    ]);
+  }
+
+  function onNoteDelete(index: number) {
+    return () => {
+      setNodes((prev) => prev.filter((_, i) => i !== index));
+    };
+  }
+
+  function onNoteSend(index: number) {
+    return () => {
+      const content = notes[index]?.contents;
+      if (content) {
+        const [title, ...rest] = content.split("\n");
+        api?.addTask({
+          content: title ?? "Meeting Note",
+          description: rest.join("\n"),
+          projectId,
+          sectionId,
+        });
+        setNodes((prev) => {
+          const newNotes = [...prev];
+          newNotes[index]!.sentToTodoist = true;
+          return newNotes;
+        });
+      }
+    };
   }
 
   function onNoteKeyDown(index: number) {
@@ -76,7 +135,7 @@ const Home: NextPage = () => {
 
         const next = notes[index + 1];
         const previous = notes[index - 1];
-        setNodes((prev) => prev.filter((_, i) => i !== index));
+        onNoteDelete(index)();
 
         // Using set timeout here to wait for the note to be removed from the dom and for react to
         // be rerendered.
@@ -91,26 +150,22 @@ const Home: NextPage = () => {
         }, 0);
       } else if (event.key === "t" && !notes[index]!.sentToTodoist) {
         event.stopPropagation();
-        const content = notes[index]?.contents;
-        if (content) {
-          api?.addTask({ content, projectId, sectionId });
-          setNodes((prev) => {
-            const newNotes = [...prev];
-            newNotes[index]!.sentToTodoist = true;
-            return newNotes;
-          });
-        }
+        onNoteSend(index)();
       } else if (event.key === "ArrowDown") {
         event.stopPropagation();
         const next = notes[index + 1];
         if (next) {
           noteContainers.current[next.id]?.focus();
+        } else {
+          input.current?.focus();
         }
       } else if (event.key === "ArrowUp") {
         event.stopPropagation();
         const previous = notes[index - 1];
         if (previous) {
           noteContainers.current[previous.id]?.focus();
+        } else {
+          input.current?.focus();
         }
       }
     };
@@ -151,16 +206,26 @@ const Home: NextPage = () => {
           </h1>
           <main className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
             <h1 className="text-lg">Create Note</h1>
-            <input
+            <textarea
               ref={input}
               onKeyDown={onInputKeyDown}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               aria-label="Create Note. Press enter to create, and press n to focus this input."
               className="rounded-lg bg-transparent font-mono text-2xl outline-none"
               autoFocus
-            ></input>
-            <p className="right-4 text-sm text-white/50">
-              Press <code className="rounded-md px-2">n</code> to focus.
-            </p>
+            ></textarea>
+            <nav className="flex items-center">
+              <p className="right-4 text-sm text-white/50">
+                Press <code className="rounded-md px-2">n</code> to focus.
+              </p>
+              <button
+                className="mx-2 ml-auto rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
+                onClick={() => onNoteAdd(note)}
+              >
+                Create
+              </button>
+            </nav>
           </main>
           <section className="container flex flex-col gap-4" role="list">
             {notes.map((note, i) => (
@@ -168,7 +233,7 @@ const Home: NextPage = () => {
                 key={note.id}
                 ref={(el) => (noteContainers.current[note.id] = el)}
                 className={
-                  "group flex items-center gap-4 rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border " +
+                  "group flex flex-col rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border md:flex-row md:items-center md:gap-4 " +
                   (note.sentToTodoist ? "border-green-600 bg-green-500/10" : "")
                 }
                 tabIndex={0}
@@ -178,21 +243,27 @@ const Home: NextPage = () => {
                 role="listitem"
                 onKeyDown={onNoteKeyDown(i)}
               >
-                <p className="font-mono text-sm text-white text-opacity-75">
+                <p className="w-max font-mono text-sm text-white text-opacity-75">
                   {new Date(note.createdAt).toLocaleTimeString()}
                 </p>
-                <p className="font-mono text-xl text-white outline-none ">
+                <p className="flex-1 font-mono text-xl text-white outline-none ">
                   {note.contents}
                 </p>
-                <nav className="ml-auto flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                  <p className="mx-2 rounded-md border border-white/50 px-4 text-white">
+                <nav className="ml-auto mt-2 flex transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
+                  <button
+                    className="mx-2 rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
+                    onClick={onNoteDelete(i)}
+                  >
                     <code className="rounded-md pr-2">d</code>
                     Delete
-                  </p>
-                  <p className="mx-2 rounded-md border border-white/50 px-4 text-white">
+                  </button>
+                  <button
+                    className="mx-2 rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
+                    onClick={onNoteSend(i)}
+                  >
                     <code className="rounded-md pr-2">t</code>
                     Todoist
-                  </p>
+                  </button>
                 </nav>
               </div>
             ))}
