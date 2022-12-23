@@ -1,9 +1,9 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "../utils/useLocalState";
-import dynamic from "next/dynamic";
 import Link from "next/link";
+import { TodoistApi, Project, Section } from "@doist/todoist-api-typescript";
 
 type Note = {
   id: string;
@@ -13,6 +13,44 @@ type Note = {
 
 const Options: NextPage = () => {
   const [apiKey, setApiKey] = useLocalStorage<string>("options.apiKey", "");
+  const [projectId, setProjectId] = useLocalStorage<string>(
+    "options.projectId",
+    ""
+  );
+  const [sectionId, setSectionId] = useLocalStorage<string>(
+    "options.sectionId",
+    ""
+  );
+
+  const api = useMemo(() => {
+    if (!apiKey) return null;
+    return new TodoistApi(apiKey);
+  }, [apiKey]);
+
+  const [projectList, setProjectList] = useState<Project[]>([]);
+  const [sections, setSections] = useState<Record<string, Section[]>>({});
+  useEffect(() => {
+    if (!api) return;
+    api.getProjects().then(async (projects) => {
+      setProjectList(projects);
+
+      const projectSections = await Promise.all(
+        projects.map(async (project) => ({
+          id: project.id,
+          sections: await api.getSections(project.id),
+        }))
+      );
+
+      let sectionsMap: Record<string, Section[]> = {};
+      for (const { id, sections } of projectSections) {
+        sectionsMap[id] = sections;
+      }
+
+      setSections(sectionsMap);
+    });
+  }, [apiKey]);
+
+  console.log(sections);
 
   return (
     <>
@@ -30,15 +68,70 @@ const Options: NextPage = () => {
             <h1 className="text-lg">Todoist Key</h1>
             <input
               aria-label="Todoist API Key"
+              id="options.apiKey"
               className="rounded-lg bg-transparent font-mono text-xl outline-none"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
             ></input>
-            <p className="right-4 text-sm text-white/50">
+            <label
+              htmlFor="options.apiKey"
+              className="right-4 text-sm text-white/50"
+            >
               Used to sync notes with Todoist. You can find your API Key in
               Settings → Integrations → Developer. Your key is stored locally on
               this device.
-            </p>
+            </label>
+          </section>
+          <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+            <h1 className="text-lg">Todoist Project</h1>
+            <select
+              aria-label="Todoist Project"
+              id="options.project"
+              className="rounded-lg bg-transparent font-mono text-xl outline-none"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+            >
+              {projectList.map((project) => (
+                <option
+                  value={project.id}
+                  label={project.name}
+                  key={project.id}
+                />
+              ))}
+            </select>
+            <label
+              htmlFor="options.project"
+              className="right-4 text-sm text-white/50"
+            >
+              When tasks are sent to Todoist, they will be added to this
+              project.
+            </label>
+          </section>
+          <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+            <h1 className="text-lg">Todoist Section</h1>
+            <select
+              aria-label="Todoist Project"
+              id="options.project"
+              className="rounded-lg bg-transparent font-mono text-xl outline-none"
+              value={sectionId}
+              onChange={(e) => setSectionId(e.target.value)}
+              disabled={!projectId || !sections[projectId]}
+            >
+              {sections[projectId]?.map((project) => (
+                <option
+                  value={project.id}
+                  label={project.name}
+                  key={project.id}
+                />
+              ))}
+            </select>
+            <label
+              htmlFor="options.project"
+              className="right-4 text-sm text-white/50"
+            >
+              When tasks are sent to Todoist, they will be added to this
+              project.
+            </label>
           </section>
           <section className="w-full">
             <Link

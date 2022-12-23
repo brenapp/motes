@@ -1,9 +1,10 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useLocalStorage } from "../utils/useLocalState";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { TodoistApi } from "@doist/todoist-api-typescript";
 
 type Note = {
   id: string;
@@ -17,6 +18,20 @@ const Home: NextPage = () => {
   const router = useRouter();
 
   const [notes, setNodes] = useLocalStorage<Note[]>("notes", []);
+  const [apiKey] = useLocalStorage<string>("options.apiKey", "");
+  const [projectId] = useLocalStorage<string | undefined>(
+    "options.projectId",
+    undefined
+  );
+  const [sectionId] = useLocalStorage<string | undefined>(
+    "options.sectionId",
+    undefined
+  );
+
+  const api = useMemo(() => {
+    if (!apiKey) return null;
+    return new TodoistApi(apiKey);
+  }, [apiKey]);
 
   useEffect(() => {
     function onKeyPress(event: KeyboardEvent) {
@@ -74,6 +89,8 @@ const Home: NextPage = () => {
         }, 0);
       } else if (event.key === "t") {
         event.stopPropagation();
+        const content = notes[index]?.contents;
+        if (content) api?.addTask({ content, projectId, sectionId });
       } else if (event.key === "ArrowDown") {
         event.stopPropagation();
         const next = notes[index + 1];
