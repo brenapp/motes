@@ -3,13 +3,11 @@ import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "../utils/useLocalState";
 import Link from "next/link";
-import { TodoistApi, Project, Section } from "@doist/todoist-api-typescript";
-
-type Note = {
-  id: string;
-  contents: string;
-  createdAt: number;
-};
+import {
+  TodoistApi,
+  type Project,
+  type Section,
+} from "@doist/todoist-api-typescript";
 
 const Options: NextPage = () => {
   const [apiKey, setApiKey] = useLocalStorage<string>("options.apiKey", "");
@@ -41,16 +39,14 @@ const Options: NextPage = () => {
         }))
       );
 
-      let sectionsMap: Record<string, Section[]> = {};
+      const sectionsMap: Record<string, Section[]> = {};
       for (const { id, sections } of projectSections) {
         sectionsMap[id] = sections;
       }
 
       setSections(sectionsMap);
     });
-  }, [apiKey]);
-
-  console.log(sections);
+  }, [apiKey, api]);
 
   return (
     <>

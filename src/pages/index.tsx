@@ -50,7 +50,7 @@ const Home: NextPage = () => {
 
     window.addEventListener("keydown", onKeyPress);
     return () => window.removeEventListener("keydown", onKeyPress);
-  }, []);
+  }, [router]);
 
   function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     event.stopPropagation();

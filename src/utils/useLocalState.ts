@@ -1,5 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 export function useLocalStorage<T>(identifier: string, initial: T): [T, Dispatch<SetStateAction<T>>] {
 
@@ -12,13 +11,13 @@ export function useLocalStorage<T>(identifier: string, initial: T): [T, Dispatch
             setState(JSON.parse(value));
         }
         setHydrated(true);
-    }, []);
+    }, [identifier]);
 
     useEffect(() => {
         if (hydrated) {
             localStorage.setItem(identifier, JSON.stringify(state));
         }
-    }, [state, hydrated])
+    }, [state, hydrated, identifier])
 
     return [state, setState];
 }
@@ -34,13 +33,13 @@ export function useSessionStorage<T>(identifier: string, initial: T): [T, Dispat
             setState(JSON.parse(value));
         }
         setHydrated(true);
-    }, []);
+    }, [identifier]);
 
     useEffect(() => {
         if (!hydrated) {
             sessionStorage.setItem(identifier, JSON.stringify(state));
         }
-    }, [state, hydrated])
+    }, [state, hydrated, identifier])
 
     return [state, setState];
 }
