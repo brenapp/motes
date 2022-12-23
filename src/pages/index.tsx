@@ -10,6 +10,7 @@ type Note = {
   id: string;
   contents: string;
   createdAt: number;
+  sentToTodoist: boolean;
 };
 
 const Home: NextPage = () => {
@@ -61,6 +62,7 @@ const Home: NextPage = () => {
           id: Math.random().toString(36).slice(2, 9),
           contents,
           createdAt: Date.now(),
+          sentToTodoist: false,
         },
       ]);
       event.currentTarget.value = "";
@@ -87,10 +89,17 @@ const Home: NextPage = () => {
             input.current?.focus();
           }
         }, 0);
-      } else if (event.key === "t") {
+      } else if (event.key === "t" && !notes[index]!.sentToTodoist) {
         event.stopPropagation();
         const content = notes[index]?.contents;
-        if (content) api?.addTask({ content, projectId, sectionId });
+        if (content) {
+          api?.addTask({ content, projectId, sectionId });
+          setNodes((prev) => {
+            const newNotes = [...prev];
+            newNotes[index]!.sentToTodoist = true;
+            return newNotes;
+          });
+        }
       } else if (event.key === "ArrowDown") {
         event.stopPropagation();
         const next = notes[index + 1];
@@ -158,7 +167,10 @@ const Home: NextPage = () => {
               <div
                 key={note.id}
                 ref={(el) => (noteContainers.current[note.id] = el)}
-                className="group flex items-center gap-4 rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border"
+                className={
+                  "group flex items-center gap-4 rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border " +
+                  (note.sentToTodoist ? "border-green-600 bg-green-500/10" : "")
+                }
                 tabIndex={0}
                 aria-label={`Note: ${note.contents} ${new Date(
                   note.createdAt
