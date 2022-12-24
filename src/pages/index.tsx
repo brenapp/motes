@@ -1,10 +1,10 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocalStorage, useSessionStorage } from "../utils/useLocalState";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { TodoistApi } from "@doist/todoist-api-typescript";
+import { useLocalStorage } from "../utils/useLocalStorage";
 
 type Note = {
   id: string;
@@ -19,16 +19,10 @@ const Home: NextPage = () => {
   const noteContainers = useRef<Record<string, HTMLDivElement | null>>({});
   const router = useRouter();
 
-  const [notes, setNodes] = useSessionStorage<Note[]>("notes", []);
-  const [apiKey] = useLocalStorage<string>("options.apiKey", "");
-  const [projectId] = useLocalStorage<string | undefined>(
-    "options.projectId",
-    undefined
-  );
-  const [sectionId] = useLocalStorage<string | undefined>(
-    "options.sectionId",
-    undefined
-  );
+  const [notes, setNotes] = useLocalStorage<Note[]>("notes", []);
+  const [apiKey] = useLocalStorage<string>("options.apiKey");
+  const [projectId] = useLocalStorage<string>("options.projectId");
+  const [sectionId] = useLocalStorage<string>("options.sectionId");
 
   const api = useMemo(() => {
     if (!apiKey) return null;
@@ -74,24 +68,24 @@ const Home: NextPage = () => {
     }
 
     if (event.key === "ArrowDown") {
-      event.preventDefault();
       const firstNote = notes[0];
       if (firstNote) {
+        event.preventDefault();
         noteContainers.current[firstNote.id]?.focus();
       }
     }
 
     if (event.key === "ArrowUp") {
-      event.preventDefault();
       const lastNote = notes[notes.length - 1];
       if (lastNote) {
+        event.preventDefault();
         noteContainers.current[lastNote.id]?.focus();
       }
     }
   }
 
   function onNoteAdd(contents: string) {
-    setNodes((prev) => [
+    setNotes((prev) => [
       ...prev,
       {
         id: Math.random().toString(36).slice(2, 9),
@@ -104,7 +98,7 @@ const Home: NextPage = () => {
 
   function onNoteDelete(index: number) {
     return () => {
-      setNodes((prev) => prev.filter((_, i) => i !== index));
+      setNotes((prev) => prev.filter((_, i) => i !== index));
     };
   }
 
@@ -119,10 +113,10 @@ const Home: NextPage = () => {
           projectId,
           sectionId,
         });
-        setNodes((prev) => {
-          const newNotes = [...prev];
-          newNotes[index]!.sentToTodoist = true;
-          return newNotes;
+
+        setNotes((prev) => {
+          prev[index]!.sentToTodoist = true;
+          return [...prev];
         });
       }
     };
@@ -211,20 +205,15 @@ const Home: NextPage = () => {
               onKeyDown={onInputKeyDown}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              aria-label="Create Note. Press enter to create, and press n to focus this input."
+              aria-label="Create Note"
               className="rounded-lg bg-transparent font-mono text-2xl outline-none"
               autoFocus
             ></textarea>
             <nav className="flex items-center">
               <p className="right-4 text-sm text-white/50">
-                Press <code className="rounded-md px-2">n</code> to focus.
+                Press <code className="rounded-md px-2">n</code> to focus. Press
+                Ctrl-Enter to create note.
               </p>
-              <button
-                className="mx-2 ml-auto rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
-                onClick={() => onNoteAdd(note)}
-              >
-                Create
-              </button>
             </nav>
           </main>
           <section className="container flex flex-col gap-4" role="list">

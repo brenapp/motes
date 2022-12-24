@@ -1,7 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
-import { useLocalStorage } from "../utils/useLocalState";
+import { useLocalStorage } from "../utils/useLocalStorage";
 import Link from "next/link";
 import {
   TodoistApi,
@@ -10,15 +10,11 @@ import {
 } from "@doist/todoist-api-typescript";
 
 const Options: NextPage = () => {
-  const [apiKey, setApiKey] = useLocalStorage<string>("options.apiKey", "");
-  const [projectId, setProjectId] = useLocalStorage<string | undefined>(
-    "options.projectId",
-    undefined
-  );
-  const [sectionId, setSectionId] = useLocalStorage<string | undefined>(
-    "options.sectionId",
-    undefined
-  );
+  const [apiKey, setApiKey] = useLocalStorage<string>("options.apiKey");
+  const [projectId, setProjectId] =
+    useLocalStorage<string>("options.projectId");
+  const [sectionId, setSectionId] =
+    useLocalStorage<string>("options.sectionId");
 
   const api = useMemo(() => {
     if (!apiKey) return null;
