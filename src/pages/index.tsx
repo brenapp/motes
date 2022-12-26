@@ -5,6 +5,11 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { TodoistApi } from "@doist/todoist-api-typescript";
 import { useLocalStorage } from "../utils/useLocalStorage";
+import {
+  composeListeners,
+  useKeyboardShortcut,
+  onKeydown,
+} from "../utils/useKeyboardShortcut";
 
 type Note = {
   id: string;
@@ -29,23 +34,19 @@ const Home: NextPage = () => {
     return new TodoistApi(apiKey);
   }, [apiKey]);
 
-  useEffect(() => {
-    function onKeyPress(event: KeyboardEvent) {
-      // Press n to focus input
-      if (event.key === "n") {
-        event.preventDefault();
-        input.current?.focus();
-      }
+  // Keyboard shortcuts
+  useKeyboardShortcut({
+    key: "n",
+    preventDefault: false,
+    callback: () => input.current?.focus(),
+  });
 
-      if (event.key === "," && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        router.push("/options");
-      }
-    }
-
-    window.addEventListener("keydown", onKeyPress);
-    return () => window.removeEventListener("keydown", onKeyPress);
-  }, [router]);
+  useKeyboardShortcut({
+    key: ",",
+    ctrlKey: true,
+    preventDefault: true,
+    callback: () => router.push("/options"),
+  });
 
   useEffect(() => {
     input.current!.style.height = "0px";
@@ -53,36 +54,42 @@ const Home: NextPage = () => {
     input.current!.style.height = scrollHeight + "px";
   }, [note]);
 
-  function onInputKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    event.stopPropagation();
-
-    if (
-      event.key === "Enter" &&
-      event.currentTarget.value &&
-      (event.metaKey || event.ctrlKey)
-    ) {
-      event.preventDefault();
-      const contents = event.currentTarget.value;
-      onNoteAdd(contents);
+  // Input Keyboard Shortcuts
+  const onInputKeydownEnter = onKeydown({
+    key: (event) => event.key === "Enter" && event.ctrlKey && note.length > 0,
+    preventDefault: true,
+    stopPropagation: true,
+    callback: () => {
+      onNoteAdd(note);
       setNote("");
-    }
+    },
+  });
 
-    if (event.key === "ArrowDown") {
-      const firstNote = notes[0];
-      if (firstNote) {
-        event.preventDefault();
-        noteContainers.current[firstNote.id]?.focus();
-      }
-    }
+  const onInputKeydownArrowDown = onKeydown({
+    key: (event) => event.key === "ArrowDown" && notes.length > 0,
+    stopPropagation: true,
+    preventDefault: true,
+    callback: () => {
+      const note = notes[0]!;
+      noteContainers.current[note.id]?.focus();
+    },
+  });
 
-    if (event.key === "ArrowUp") {
-      const lastNote = notes[notes.length - 1];
-      if (lastNote) {
-        event.preventDefault();
-        noteContainers.current[lastNote.id]?.focus();
-      }
-    }
-  }
+  const onInputKeydownArrowUp = onKeydown({
+    key: (event) => event.key === "ArrowUp" && notes.length > 0,
+    stopPropagation: true,
+    preventDefault: true,
+    callback: () => {
+      const note = notes[notes.length - 1]!;
+      noteContainers.current[note.id]?.focus();
+    },
+  });
+
+  const onInputKeydown = composeListeners(
+    onInputKeydownEnter,
+    onInputKeydownArrowUp,
+    onInputKeydownArrowDown
+  );
 
   function onNoteAdd(contents: string) {
     setNotes((prev) => [
@@ -122,11 +129,11 @@ const Home: NextPage = () => {
     };
   }
 
-  function onNoteKeyDown(index: number) {
-    return (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "d") {
-        event.stopPropagation();
-
+  const onNoteKeydown = (index: number) => {
+    const onNoteKeydownD = onKeydown({
+      key: "d",
+      stopPropagation: true,
+      callback: () => {
         const next = notes[index + 1];
         const previous = notes[index - 1];
         onNoteDelete(index)();
@@ -142,28 +149,50 @@ const Home: NextPage = () => {
             input.current?.focus();
           }
         }, 0);
-      } else if (event.key === "t" && !notes[index]!.sentToTodoist) {
-        event.stopPropagation();
+      },
+    });
+
+    const onNoteKeydownT = onKeydown({
+      key: "t",
+      stopPropagation: true,
+      callback: () => {
         onNoteSend(index)();
-      } else if (event.key === "ArrowDown") {
-        event.stopPropagation();
+      },
+    });
+
+    const onNoteKeydownArrowDown = onKeydown({
+      key: "ArrowDown",
+      stopPropagation: true,
+      callback: () => {
         const next = notes[index + 1];
         if (next) {
           noteContainers.current[next.id]?.focus();
         } else {
           input.current?.focus();
         }
-      } else if (event.key === "ArrowUp") {
-        event.stopPropagation();
-        const previous = notes[index - 1];
-        if (previous) {
-          noteContainers.current[previous.id]?.focus();
+      },
+    });
+
+    const onNoteKeydownArrowUp = onKeydown({
+      key: "ArrowUp",
+      stopPropagation: true,
+      callback: () => {
+        const prev = notes[index - 1];
+        if (prev) {
+          noteContainers.current[prev.id]?.focus();
         } else {
           input.current?.focus();
         }
-      }
-    };
-  }
+      },
+    });
+
+    return composeListeners(
+      onNoteKeydownD,
+      onNoteKeydownT,
+      onNoteKeydownArrowDown,
+      onNoteKeydownArrowUp
+    );
+  };
 
   return (
     <>
@@ -202,10 +231,11 @@ const Home: NextPage = () => {
             <h1 className="text-lg">Create Note</h1>
             <textarea
               ref={input}
-              onKeyDown={onInputKeyDown}
+              id="note"
+              onKeyDown={onInputKeydown}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              aria-label="Create Note"
+              aria-label="Create Note. Press Ctrl-Enter to submit note. When outside this textarea, press n to focus."
               className="rounded-lg bg-transparent font-mono text-2xl outline-none"
               autoFocus
             ></textarea>
@@ -230,7 +260,7 @@ const Home: NextPage = () => {
                   note.createdAt
                 ).toLocaleTimeString()} Press d to delete, and press t to send to todoist. Use arrow keys or tab to navigate.`}
                 role="listitem"
-                onKeyDown={onNoteKeyDown(i)}
+                onKeyDown={onNoteKeydown(i)}
               >
                 <p className="w-max font-mono text-sm text-white text-opacity-75">
                   {new Date(note.createdAt).toLocaleTimeString()}
