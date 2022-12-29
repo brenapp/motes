@@ -204,7 +204,7 @@ const Home: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <nav className="fixed right-4 top-4 text-white/50">
           <Link href="/options" className="group outline-none hover:border">
-            <p className="flex gap-2 rounded-md p-4 group-focus-within:border">
+            <p className="flex gap-2 rounded-md p-4 hover:bg-white/10 group-focus-within:border">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -239,11 +239,35 @@ const Home: NextPage = () => {
               className="rounded-lg bg-transparent font-mono text-2xl outline-none"
               autoFocus
             ></textarea>
-            <nav className="flex items-center">
+            <nav className="flex items-center justify-between">
               <p className="right-4 text-sm text-white/50">
                 Press <code className="rounded-md px-2">n</code> to focus. Press
                 Ctrl-Enter to create note.
               </p>
+              <button
+                className="flex rounded-md bg-white/5 py-2 px-4 text-white/50 hover:bg-white/10 hover:text-white"
+                tabIndex={-1}
+                onClick={() => {
+                  onNoteAdd(note);
+                  setNote("");
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span className="ml-2">Create</span>
+              </button>
             </nav>
           </main>
           <section className="container flex flex-col gap-4" role="list">
