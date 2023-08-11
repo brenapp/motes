@@ -59,6 +59,15 @@ const Options: NextPage = () => {
           <h1 className="mb-8 text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
             <span className="text-[hsl(280,100%,70%)]">Options</span>
           </h1>
+          <section className="w-full">
+            <Link
+              href="/"
+              className="flex w-max flex-col rounded-md bg-white/10 p-4 px-8
+                text-white focus-within:border"
+            >
+              Back
+            </Link>
+          </section>
           <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
             <h1 className="text-lg">Todoist Key</h1>
             <input
@@ -147,15 +156,6 @@ const Options: NextPage = () => {
               When tasks are sent to Todoist, they will be added with this due
               date
             </label>
-          </section>
-          <section className="w-full">
-            <Link
-              href="/"
-              className="flex w-max flex-col rounded-md bg-white/10 p-4 px-8
-                text-white focus-within:border"
-            >
-              Back
-            </Link>
           </section>
         </div>
       </main>
