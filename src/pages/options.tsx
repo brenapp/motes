@@ -16,6 +16,9 @@ const Options: NextPage = () => {
   const [sectionId, setSectionId] =
     useLocalStorage<string>("options.sectionId");
 
+  const [dueString, setDueString] =
+    useLocalStorage<string>("options.dueString");
+
   const api = useMemo(() => {
     if (!apiKey) return null;
     return new TodoistApi(apiKey);
@@ -127,6 +130,24 @@ const Options: NextPage = () => {
               </label>
             </section>
           )}
+          <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+            <h1 className="text-lg">Due Date</h1>
+            <select
+              aria-label="Due Date"
+              className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl
+            outline-none"
+              value={dueString}
+              onChange={(e) => setDueString(e.target.value)}
+            >
+              <option value="">No Date</option>
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+            </select>
+            <label htmlFor="options.dueString">
+              When tasks are sent to Todoist, they will be added with this due
+              date
+            </label>
+          </section>
           <section className="w-full">
             <Link
               href="/"

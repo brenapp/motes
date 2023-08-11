@@ -36,8 +36,10 @@ const Home: NextPage = () => {
 
   // Keyboard shortcuts
   useKeyboardShortcut({
-    key: "n",
-    preventDefault: false,
+    key: (ev) =>
+      ["n", "ArrowUp"].includes(ev.key) &&
+      document.activeElement !== input.current,
+    preventDefault: true,
     callback: () => input.current?.focus(),
   });
 
@@ -46,6 +48,17 @@ const Home: NextPage = () => {
     ctrlKey: true,
     preventDefault: true,
     callback: () => router.push("/options"),
+  });
+
+  useKeyboardShortcut({
+    key: "ArrowDown",
+    preventDefault: true,
+    stopPropagation: true,
+    callback: () => {
+      const note = notes[0];
+      if (!note) return;
+      noteContainers.current[note.id]?.focus();
+    },
   });
 
   useEffect(() => {
@@ -70,7 +83,8 @@ const Home: NextPage = () => {
     stopPropagation: true,
     preventDefault: true,
     callback: () => {
-      const note = notes[0]!;
+      const note = notes[0];
+      if (!note) return;
       noteContainers.current[note.id]?.focus();
     },
   });
@@ -108,6 +122,7 @@ const Home: NextPage = () => {
       setNotes((prev) => prev.filter((_, i) => i !== index));
     };
   }
+  const dueString = localStorage.getItem("options.dueString") ?? undefined;
 
   function onNoteSend(index: number) {
     return () => {
@@ -119,6 +134,7 @@ const Home: NextPage = () => {
           description: rest.join("\n"),
           projectId,
           sectionId,
+          dueString,
         });
 
         setNotes((prev) => {
@@ -223,10 +239,7 @@ const Home: NextPage = () => {
             </p>
           </Link>
         </nav>
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            <span className="text-[hsl(280,100%,70%)]">MOTES</span>
-          </h1>
+        <div className="container flex flex-col items-center justify-center gap-12 px-4 pt-24 ">
           <main className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
             <h1 className="text-lg">Create Note</h1>
             <textarea
