@@ -68,14 +68,14 @@ export function useKeyboardShortcut(options: Options) {
                 }
 
                 options.callback(event);
-            };
+            }
 
         }
 
         window.addEventListener("keydown", handle);
         return () => window.removeEventListener("keydown", handle);
     }, [options.key, options.callback]);
-};
+}
 
 export function onKeydown<T>(options: Options): (event: React.KeyboardEvent<T>) => void {
     return (event: React.KeyboardEvent<T>) => {
@@ -120,9 +120,9 @@ export function onKeydown<T>(options: Options): (event: React.KeyboardEvent<T>) 
             }
 
             options.callback(event.nativeEvent);
-        };
+        }
     }
-};
+}
 
 export function composeListeners(...listeners: ((event: React.KeyboardEvent) => void)[]) {
     return (event: React.KeyboardEvent) => {

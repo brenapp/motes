@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "fix": "npx eslint --fix --ext .tsx,.ts ."
   },
   "dependencies": {
     "@doist/todoist-api-typescript": "^2.1.2",

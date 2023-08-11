@@ -122,10 +122,9 @@ const Home: NextPage = () => {
       setNotes((prev) => prev.filter((_, i) => i !== index));
     };
   }
-  const dueString = localStorage.getItem("options.dueString") ?? undefined;
-
   function onNoteSend(index: number) {
     return () => {
+      const dueString = localStorage.getItem("options.dueString") ?? undefined;
       const content = notes[index]?.contents;
       if (content) {
         const [title, ...rest] = content.split("\n");
