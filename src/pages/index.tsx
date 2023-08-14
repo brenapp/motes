@@ -21,7 +21,7 @@ type Note = {
 const Home: NextPage = () => {
   const input = useRef<HTMLTextAreaElement>(null);
   const [note, setNote] = useState<string>("");
-  const noteContainers = useRef<Record<string, HTMLDivElement | null>>({});
+  const noteRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const router = useRouter();
 
   const [notes, setNotes] = useLocalStorage<Note[]>("notes", []);
@@ -57,7 +57,7 @@ const Home: NextPage = () => {
     callback: () => {
       const note = notes[0];
       if (!note) return;
-      noteContainers.current[note.id]?.focus();
+      noteRefs.current[note.id]?.focus();
     },
   });
 
@@ -85,7 +85,7 @@ const Home: NextPage = () => {
     callback: () => {
       const note = notes[0];
       if (!note) return;
-      noteContainers.current[note.id]?.focus();
+      noteRefs.current[note.id]?.focus();
     },
   });
 
@@ -95,7 +95,7 @@ const Home: NextPage = () => {
     preventDefault: true,
     callback: () => {
       const note = notes[notes.length - 1]!;
-      noteContainers.current[note.id]?.focus();
+      noteRefs.current[note.id]?.focus();
     },
   });
 
@@ -157,9 +157,9 @@ const Home: NextPage = () => {
         // be rerendered.
         setTimeout(() => {
           if (next) {
-            noteContainers.current[next.id]?.focus();
+            noteRefs.current[next.id]?.focus();
           } else if (previous) {
-            noteContainers.current[previous.id]?.focus();
+            noteRefs.current[previous.id]?.focus();
           } else {
             input.current?.focus();
           }
@@ -178,10 +178,11 @@ const Home: NextPage = () => {
     const onNoteKeydownArrowDown = onKeydown({
       key: "ArrowDown",
       stopPropagation: true,
-      callback: () => {
+      callback: (ev) => {
         const next = notes[index + 1];
         if (next) {
-          noteContainers.current[next.id]?.focus();
+          const ref = noteRefs.current[next.id];
+          ref?.focus();
         } else {
           input.current?.focus();
         }
@@ -194,7 +195,8 @@ const Home: NextPage = () => {
       callback: () => {
         const prev = notes[index - 1];
         if (prev) {
-          noteContainers.current[prev.id]?.focus();
+          const ref = noteRefs.current[prev.id];
+          ref?.focus();
         } else {
           input.current?.focus();
         }
@@ -296,7 +298,7 @@ const Home: NextPage = () => {
             {notes.map((note, i) => (
               <div
                 key={note.id}
-                ref={(el) => (noteContainers.current[note.id] = el)}
+                ref={(el) => (noteRefs.current[note.id] = el)}
                 className={
                   "group flex flex-col rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border md:flex-row md:items-center md:gap-4 " +
                   (note.sentToTodoist ? "border-green-600 bg-green-500/10" : "")

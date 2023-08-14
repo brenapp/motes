@@ -56,6 +56,10 @@ export function useKeyboardShortcut(options: Options) {
                     event.preventDefault();
                 }
 
+                if (options.stopPropagation) {
+                    event.stopPropagation();
+                }
+
                 options.callback(event);
 
             } else if (typeof options.key === "function") {
@@ -65,6 +69,10 @@ export function useKeyboardShortcut(options: Options) {
 
                 if (options.preventDefault) {
                     event.preventDefault();
+                }
+
+                if (options.stopPropagation) {
+                    event.stopPropagation();
                 }
 
                 options.callback(event);
@@ -108,6 +116,10 @@ export function onKeydown<T>(options: Options): (event: React.KeyboardEvent<T>) 
                 event.preventDefault();
             }
 
+            if (options.stopPropagation) {
+                event.stopPropagation();
+            }
+
             options.callback(event.nativeEvent);
 
         } else if (typeof options.key === "function") {
@@ -117,6 +129,10 @@ export function onKeydown<T>(options: Options): (event: React.KeyboardEvent<T>) 
 
             if (options.preventDefault) {
                 event.preventDefault();
+            }
+
+            if (options.stopPropagation) {
+                event.stopPropagation();
             }
 
             options.callback(event.nativeEvent);
