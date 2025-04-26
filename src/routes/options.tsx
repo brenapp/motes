@@ -4,8 +4,7 @@ import {
   type Section,
 } from "@doist/todoist-api-typescript";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { queryClient } from "../utils/client";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 
 type ProjectsData = {
@@ -46,6 +45,9 @@ const projectsQueryOptions = (apiKey?: string | null) =>
     queryFn: () => getProjectsData(apiKey),
   });
 
+const pendingClassName = (pending: boolean) =>
+  pending ? " animate-pulse" : "";
+
 const Options: React.FC = () => {
   const [apiKey, setApiKey] = useLocalStorageState<string | undefined>(
     "options.apiKey",
@@ -65,9 +67,9 @@ const Options: React.FC = () => {
     { defaultValue: undefined, serializer },
   );
 
-  const {
-    data: { projects, sections },
-  } = useSuspenseQuery(projectsQueryOptions(apiKey));
+  const { data, isPending: isPendingProjectData } = useQuery(
+    projectsQueryOptions(apiKey),
+  );
 
   return (
     <>
@@ -102,7 +104,12 @@ const Options: React.FC = () => {
               this device.
             </label>
           </section>
-          <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+          <section
+            className={
+              "flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border" +
+              pendingClassName(isPendingProjectData)
+            }
+          >
             <h1 className="text-lg">Todoist Project</h1>
             <select
               aria-label="Todoist Project"
@@ -111,7 +118,7 @@ const Options: React.FC = () => {
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
             >
-              {projects.map((project) => (
+              {data?.projects.map((project) => (
                 <option
                   value={project.id}
                   label={project.name}
@@ -128,7 +135,12 @@ const Options: React.FC = () => {
             </label>
           </section>
           {projectId && (
-            <section className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+            <section
+              className={
+                "flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border" +
+                pendingClassName(isPendingProjectData)
+              }
+            >
               <h1 className="text-lg">Todoist Section</h1>
               <select
                 aria-label="Todoist Project"
@@ -136,9 +148,9 @@ const Options: React.FC = () => {
                 className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
                 value={sectionId}
                 onChange={(e) => setSectionId(e.target.value)}
-                disabled={!projectId || !sections[projectId]}
+                disabled={!projectId || !data?.sections[projectId]}
               >
-                {sections[projectId]?.map((project) => (
+                {data?.sections[projectId]?.map((project) => (
                   <option
                     value={project.id}
                     label={project.name}
@@ -180,11 +192,11 @@ const Options: React.FC = () => {
 
 export const Route = createFileRoute("/options")({
   component: Options,
-  loader: () => {
-    return queryClient.ensureQueryData(
-      projectsQueryOptions(localStorage.getItem("options.apiKey")),
-    );
-  },
+  // loader: () => {
+  //   return queryClient.ensureQueryData(
+  //     projectsQueryOptions(localStorage.getItem("options.apiKey")),
+  //   );
+  // },
   head: () => ({
     title: "Options - Motes",
     meta: [{ name: "description", content: "Quickly take meeting notes" }],
