@@ -5,7 +5,7 @@ import {
 } from "@doist/todoist-api-typescript";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { queryClient } from "../utils/queryclient";
+import { queryClient } from "../utils/queryClient";
 import useLocalStorageState from "use-local-storage-state";
 
 type ProjectsData = {
