@@ -30,16 +30,16 @@ const Index: React.FC = () => {
     defaultValue: [],
   });
 
-  const [apiKey] = useLocalStorageState<string | undefined>("options.apiKey", {
+  const [apiKey] = useLocalStorageState<string | undefined>("options.motes.apiKey", {
     defaultValue: undefined,
     serializer,
   });
   const [projectId] = useLocalStorageState<string | undefined>(
-    "options.projectId",
+    "options.motes.projectId",
     { defaultValue: undefined, serializer },
   );
   const [sectionId] = useLocalStorageState<string | undefined>(
-    "options.sectionId",
+    "options.motes.sectionId",
     { defaultValue: undefined, serializer },
   );
 
@@ -138,7 +138,7 @@ const Index: React.FC = () => {
   }
   function onNoteSend(index: number) {
     return () => {
-      const dueString = localStorage.getItem("options.dueString") ?? undefined;
+      const dueString = localStorage.getItem("options.motes.dueString") ?? undefined;
       const content = notes[index]?.contents;
       if (content) {
         const [title, ...rest] = content.split("\n");

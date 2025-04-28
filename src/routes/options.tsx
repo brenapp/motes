@@ -50,20 +50,20 @@ const pendingClassName = (pending: boolean) =>
 
 const Options: React.FC = () => {
   const [apiKey, setApiKey] = useLocalStorageState<string | undefined>(
-    "options.apiKey",
+    "options.motes.apiKey",
     { defaultValue: undefined, serializer },
   );
   const [projectId, setProjectId] = useLocalStorageState<string | undefined>(
-    "options.projectId",
+    "options.motes.projectId",
     { defaultValue: undefined, serializer },
   );
   const [sectionId, setSectionId] = useLocalStorageState<string | undefined>(
-    "options.sectionId",
+    "options.motes.sectionId",
     { defaultValue: undefined, serializer },
   );
 
   const [dueString, setDueString] = useLocalStorageState<string | undefined>(
-    "options.dueString",
+    "options.motes.dueString",
     { defaultValue: undefined, serializer },
   );
 
@@ -90,13 +90,13 @@ const Options: React.FC = () => {
             <h1 className="text-lg">Todoist Key</h1>
             <input
               aria-label="Todoist API Key"
-              id="options.apiKey"
+              id="options.motes.apiKey"
               className="rounded-lg bg-transparent font-mono text-xl outline-none"
               value={apiKey ?? ""}
               onChange={(e) => setApiKey(e.target.value)}
             ></input>
             <label
-              htmlFor="options.apiKey"
+              htmlFor="options.motes.apiKey"
               className="right-4 text-sm text-white/50"
             >
               Used to sync notes with Todoist. You can find your API Key in
@@ -113,7 +113,7 @@ const Options: React.FC = () => {
             <h1 className="text-lg">Todoist Project</h1>
             <select
               aria-label="Todoist Project"
-              id="options.project"
+              id="options.motes.project"
               className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
@@ -127,7 +127,7 @@ const Options: React.FC = () => {
               ))}
             </select>
             <label
-              htmlFor="options.project"
+              htmlFor="options.motes.project"
               className="right-4 text-sm text-white/50"
             >
               When tasks are sent to Todoist, they will be added to this
@@ -144,7 +144,7 @@ const Options: React.FC = () => {
               <h1 className="text-lg">Todoist Section</h1>
               <select
                 aria-label="Todoist Project"
-                id="options.project"
+                id="options.motes.project"
                 className="w-min rounded-lg bg-transparent pr-4 font-mono text-xl outline-none"
                 value={sectionId}
                 onChange={(e) => setSectionId(e.target.value)}
@@ -159,7 +159,7 @@ const Options: React.FC = () => {
                 ))}
               </select>
               <label
-                htmlFor="options.project"
+                htmlFor="options.motes.project"
                 className="right-4 text-sm text-white/50"
               >
                 When tasks are sent to Todoist, they will be added to this
@@ -179,7 +179,7 @@ const Options: React.FC = () => {
               <option value="today">Today</option>
               <option value="tomorrow">Tomorrow</option>
             </select>
-            <label htmlFor="options.dueString">
+            <label htmlFor="options.motes.dueString">
               When tasks are sent to Todoist, they will be added with this due
               date
             </label>
@@ -194,7 +194,7 @@ export const Route = createFileRoute("/options")({
   component: Options,
   // loader: () => {
   //   return queryClient.ensureQueryData(
-  //     projectsQueryOptions(localStorage.getItem("options.apiKey")),
+  //     projectsQueryOptions(localStorage.getItem("options.motes.apiKey")),
   //   );
   // },
   head: () => ({
