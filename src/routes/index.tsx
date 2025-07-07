@@ -310,7 +310,7 @@ const Index: React.FC = () => {
                 noteRefs.current[note.id] = el;
               }}
               className={
-                "group flex flex-col rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border md:flex-row md:items-center md:gap-4 " +
+                "group flex flex-col rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border focus:border-white/50 md:flex-row md:items-center md:gap-4 " +
                 (note.sentToTodoist ? "border-green-600 bg-green-500/10" : "")
               }
               tabIndex={0}
