@@ -139,6 +139,16 @@ const Index: React.FC = () => {
       setNotes((prev) => prev.filter((_, i) => i !== index));
     };
   }
+  function onNoteEdit(index: number) {
+    return () => {
+      const contents = notes[index]?.contents;
+      setNote(contents ?? "");
+
+      input.current?.focus();
+      onNoteDelete(index)();
+    };
+  }
+
   function onNoteSend(index: number) {
     return () => {
       const dueString =
@@ -185,6 +195,15 @@ const Index: React.FC = () => {
       },
     });
 
+    const onNoteKeydownE = onKeydown({
+      key: "e",
+      stopPropagation: true,
+      preventDefault: true,
+      callback: () => {
+        onNoteEdit(index)();
+      },
+    });
+
     const onNoteKeydownT = onKeydown({
       key: (ev) => ["t", "ArrowRight"].includes(ev.key),
       stopPropagation: true,
@@ -223,6 +242,7 @@ const Index: React.FC = () => {
 
     return composeListeners(
       onNoteKeydownD,
+      onNoteKeydownE,
       onNoteKeydownT,
       onNoteKeydownArrowDown,
       onNoteKeydownArrowUp,
@@ -333,6 +353,13 @@ const Index: React.FC = () => {
                 {note.contents}
               </pre>
               <nav className="mt-2 ml-auto flex transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
+                <button
+                  className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
+                  onClick={onNoteEdit(i)}
+                >
+                  <code className="rounded-md pr-2">e</code>
+                  Edit
+                </button>
                 <button
                   className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
                   onClick={onNoteDelete(i)}
