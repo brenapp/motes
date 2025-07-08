@@ -9,7 +9,9 @@ export const Route = createRootRoute({
   component: () => (
     <QueryClientProvider client={queryClient}>
       <HeadContent />
-      <Outlet />
+      <main className="flex min-h-screen flex-col items-center bg-zinc-100 dark:bg-zinc-800">
+        <Outlet />
+      </main>
       <TanStackRouterDevtools />
     </QueryClientProvider>
   ),

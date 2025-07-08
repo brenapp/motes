@@ -30,10 +30,13 @@ const Index: React.FC = () => {
     defaultValue: [],
   });
 
-  const [apiKey] = useLocalStorageState<string | undefined>("options.motes.apiKey", {
-    defaultValue: undefined,
-    serializer,
-  });
+  const [apiKey] = useLocalStorageState<string | undefined>(
+    "options.motes.apiKey",
+    {
+      defaultValue: undefined,
+      serializer,
+    },
+  );
   const [projectId] = useLocalStorageState<string | undefined>(
     "options.motes.projectId",
     { defaultValue: undefined, serializer },
@@ -138,7 +141,8 @@ const Index: React.FC = () => {
   }
   function onNoteSend(index: number) {
     return () => {
-      const dueString = localStorage.getItem("options.motes.dueString") ?? undefined;
+      const dueString =
+        localStorage.getItem("options.motes.dueString") ?? undefined;
       const content = notes[index]?.contents;
       if (content) {
         const [title, ...rest] = content.split("\n");
@@ -226,8 +230,8 @@ const Index: React.FC = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-      <nav className="fixed top-4 right-4 text-white/50">
+    <>
+      <nav className="fixed top-4 right-4 dark:text-white/50">
         <Link to="/options" className="group outline-none hover:border">
           <div className="flex gap-2 rounded-md p-4 group-focus-within:border hover:bg-white/10">
             <svg
@@ -259,7 +263,7 @@ const Index: React.FC = () => {
         </Link>
       </nav>
       <div className="container flex flex-col items-center justify-center gap-12 px-4 pt-24">
-        <main className="flex w-full flex-col gap-4 rounded-xl bg-white/10 p-4 text-white focus-within:border">
+        <main className="flex w-full flex-col gap-4 rounded-xl bg-zinc-900/10 p-4 focus-within:border dark:bg-white/10 dark:text-white">
           <h1 className="text-lg">Create Note</h1>
           <textarea
             ref={input}
@@ -272,12 +276,12 @@ const Index: React.FC = () => {
             autoFocus
           ></textarea>
           <nav className="flex items-center justify-between">
-            <p className="right-4 text-sm text-white/50">
+            <p className="right-4 text-sm dark:text-white/50">
               Press <code className="rounded-md px-2">n</code> to focus. Press
               Ctrl-Enter to create note.
             </p>
             <button
-              className="flex rounded-md bg-white/5 px-4 py-2 text-white/50 hover:bg-white/10 hover:text-white"
+              className="flex rounded-md px-4 py-2 hover:bg-white/10 dark:bg-white/5 dark:text-white/50 hover:dark:text-white"
               tabIndex={-1}
               onClick={() => {
                 onNoteAdd(note);
@@ -310,8 +314,10 @@ const Index: React.FC = () => {
                 noteRefs.current[note.id] = el;
               }}
               className={
-                "group flex flex-col rounded-lg bg-white/10 p-4 outline-none hover:shadow-lg focus:border focus:border-white/50 md:flex-row md:items-center md:gap-4 " +
-                (note.sentToTodoist ? "border-green-600 bg-green-500/10" : "")
+                "group flex flex-col rounded-lg p-4 outline-none hover:shadow-lg md:flex-row md:items-center md:gap-4 dark:bg-white/10 " +
+                (note.sentToTodoist
+                  ? "border border-green-600 focus:border-green-400 focus:bg-green-500/20 dark:bg-green-500/10"
+                  : "focus:border dark:focus:border-white/50")
               }
               tabIndex={0}
               aria-label={`Note: ${note.contents} ${new Date(
@@ -320,22 +326,22 @@ const Index: React.FC = () => {
               role="listitem"
               onKeyDown={onNoteKeydown(i)}
             >
-              <p className="text-opacity-75 w-max font-mono text-sm text-white">
+              <p className="text-opacity-75 w-max font-mono text-sm dark:text-white">
                 {new Date(note.createdAt).toLocaleTimeString()}
               </p>
-              <p className="flex-1 font-mono text-xl text-white outline-none">
+              <pre className="flex-1 overflow-x-hidden font-mono text-xl outline-none group-focus-within:overflow-x-auto dark:text-white">
                 {note.contents}
-              </p>
+              </pre>
               <nav className="mt-2 ml-auto flex transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
                 <button
-                  className="mx-2 rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
+                  className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
                   onClick={onNoteDelete(i)}
                 >
                   <code className="rounded-md pr-2">d</code>
                   Delete
                 </button>
                 <button
-                  className="mx-2 rounded-md border border-white/50 px-4 text-white hover:bg-white/50"
+                  className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
                   onClick={onNoteSend(i)}
                 >
                   <code className="rounded-md pr-2">t</code>
@@ -346,7 +352,7 @@ const Index: React.FC = () => {
           ))}
         </section>
       </div>
-    </main>
+    </>
   );
 };
 export const Route = createFileRoute("/")({
