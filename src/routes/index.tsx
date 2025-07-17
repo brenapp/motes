@@ -26,9 +26,16 @@ const Index: React.FC = () => {
   const noteRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navigate = useNavigate({ from: "/" });
 
-  const [notes, setNotes] = useLocalStorageState<Note[]>("notes", {
+  const [list, setList] = useLocalStorageState<string[]>("notes.list", {
     defaultValue: [],
   });
+
+  const [notes, setNotes] = useLocalStorageState<Record<string, Note>>(
+    "notes",
+    {
+      defaultValue: {},
+    },
+  );
 
   const [apiKey] = useLocalStorageState<string | undefined>(
     "options.motes.apiKey",
@@ -72,7 +79,8 @@ const Index: React.FC = () => {
     preventDefault: true,
     stopPropagation: true,
     callback: () => {
-      const note = notes[0];
+      const id = list[0];
+      const note = notes[id];
       if (!note) return;
       noteRefs.current[note.id]?.focus();
     },
@@ -96,22 +104,24 @@ const Index: React.FC = () => {
   });
 
   const onInputKeydownArrowDown = onKeydown({
-    key: (event) => event.key === "ArrowDown" && notes.length > 0,
+    key: (event) => event.key === "ArrowDown" && list.length > 0,
     stopPropagation: true,
     preventDefault: true,
     callback: () => {
-      const note = notes[0];
+      const id = list[0];
+      const note = notes[id];
       if (!note) return;
       noteRefs.current[note.id]?.focus();
     },
   });
 
   const onInputKeydownArrowUp = onKeydown({
-    key: (event) => event.key === "ArrowUp" && notes.length > 0,
+    key: (event) => event.key === "ArrowUp" && list.length > 0,
     stopPropagation: true,
     preventDefault: true,
     callback: () => {
-      const note = notes[notes.length - 1]!;
+      const id = list[list.length - 1];
+      const note = notes[id]!;
       noteRefs.current[note.id]?.focus();
     },
   });
@@ -123,37 +133,37 @@ const Index: React.FC = () => {
   );
 
   function onNoteAdd(contents: string) {
-    setNotes((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(36).slice(2, 9),
-        contents,
-        createdAt: Date.now(),
-        sentToTodoist: false,
-      },
-    ]);
+    const note = {
+      id: Math.random().toString(36).slice(2, 9),
+      contents,
+      createdAt: Date.now(),
+      sentToTodoist: false,
+    };
+
+    setNotes((prev) => ({ ...prev, [note.id]: note }));
+    setList((prev) => [...prev, note.id]);
   }
 
-  function onNoteDelete(index: number) {
+  function onNoteDelete(id: string) {
     return () => {
-      setNotes((prev) => prev.filter((_, i) => i !== index));
+      setList((prev) => prev.filter((value) => value !== id));
     };
   }
-  function onNoteEdit(index: number) {
+  function onNoteEdit(id: string) {
     return () => {
-      const contents = notes[index]?.contents;
+      const contents = notes[id]?.contents;
       setNote(contents ?? "");
 
       input.current?.focus();
-      onNoteDelete(index)();
+      onNoteDelete(id)();
     };
   }
 
-  function onNoteSend(index: number) {
+  function onNoteSend(id: string) {
     return () => {
       const dueString =
         localStorage.getItem("options.motes.dueString") ?? undefined;
-      const content = notes[index]?.contents;
+      const content = notes[id]?.contents;
       if (content) {
         const [title, ...rest] = content.split("\n");
         api?.addTask({
@@ -164,22 +174,28 @@ const Index: React.FC = () => {
           dueString,
         });
 
-        setNotes((prev) => {
-          prev[index]!.sentToTodoist = true;
-          return [...prev];
-        });
+        setNotes((prev) => ({
+          ...prev,
+          [id]: {
+            ...prev[id],
+            sentToTodoist: true,
+          },
+        }));
       }
     };
   }
 
-  const onNoteKeydown = (index: number) => {
+  const onNoteKeydown = (id: string, index: number) => {
     const onNoteKeydownD = onKeydown({
       key: (ev) => ["d", "ArrowLeft"].includes(ev.key),
       stopPropagation: true,
       callback: () => {
-        const next = notes[index + 1];
-        const previous = notes[index - 1];
-        onNoteDelete(index)();
+        const nextId = list[index + 1];
+        const previousId = list[index - 1];
+        const next = notes[nextId];
+        const previous = notes[previousId];
+
+        onNoteDelete(id)();
 
         // Using set timeout here to wait for the note to be removed from the dom and for react to
         // be rerendered.
@@ -200,7 +216,8 @@ const Index: React.FC = () => {
       stopPropagation: true,
       preventDefault: true,
       callback: () => {
-        onNoteEdit(index)();
+        const id = list[index];
+        onNoteEdit(id)();
       },
     });
 
@@ -208,7 +225,8 @@ const Index: React.FC = () => {
       key: (ev) => ["t", "ArrowRight"].includes(ev.key),
       stopPropagation: true,
       callback: () => {
-        onNoteSend(index)();
+        const id = list[index];
+        onNoteSend(id)();
       },
     });
 
@@ -216,7 +234,8 @@ const Index: React.FC = () => {
       key: "ArrowDown",
       stopPropagation: true,
       callback: () => {
-        const next = notes[index + 1];
+        const nextId = list[index + 1];
+        const next = notes[nextId];
         if (next) {
           const ref = noteRefs.current[next.id];
           ref?.focus();
@@ -230,7 +249,8 @@ const Index: React.FC = () => {
       key: "ArrowUp",
       stopPropagation: true,
       callback: () => {
-        const prev = notes[index - 1];
+        const prevId = list[index - 1];
+        const prev = notes[prevId];
         if (prev) {
           const ref = noteRefs.current[prev.id];
           ref?.focus();
@@ -327,49 +347,49 @@ const Index: React.FC = () => {
           </nav>
         </main>
         <section className="container flex flex-col gap-4" role="list">
-          {notes.map((note, i) => (
+          {list.map((id, i) => (
             <div
-              key={note.id}
+              key={id}
               ref={(el) => {
-                noteRefs.current[note.id] = el;
+                noteRefs.current[id] = el;
               }}
               className={
                 "group flex flex-col rounded-lg p-4 outline-none hover:shadow-lg md:flex-row md:items-center md:gap-4 dark:bg-white/10 " +
-                (note.sentToTodoist
+                (notes[id].sentToTodoist
                   ? "border border-green-600 focus:border-green-400 focus:bg-green-500/20 dark:bg-green-500/10"
                   : "focus:border dark:focus:border-white/50")
               }
               tabIndex={0}
-              aria-label={`Note: ${note.contents} ${new Date(
-                note.createdAt,
+              aria-label={`Note: ${notes[id].contents} ${new Date(
+                notes[id].createdAt,
               ).toLocaleTimeString()} Press d to delete, and press t to send to todoist. Use arrow keys or tab to navigate.`}
               role="listitem"
-              onKeyDown={onNoteKeydown(i)}
+              onKeyDown={onNoteKeydown(id, i)}
             >
               <p className="text-opacity-75 w-max font-mono text-sm dark:text-white">
-                {new Date(note.createdAt).toLocaleTimeString()}
+                {new Date(notes[id].createdAt).toLocaleTimeString()}
               </p>
               <pre className="flex-1 overflow-x-hidden font-mono text-xl outline-none group-focus-within:overflow-x-auto dark:text-white">
-                {note.contents}
+                {notes[id].contents}
               </pre>
               <nav className="mt-2 ml-auto flex transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
                 <button
                   className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
-                  onClick={onNoteEdit(i)}
+                  onClick={onNoteEdit(id)}
                 >
                   <code className="rounded-md pr-2">e</code>
                   Edit
                 </button>
                 <button
                   className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
-                  onClick={onNoteDelete(i)}
+                  onClick={onNoteDelete(id)}
                 >
                   <code className="rounded-md pr-2">d</code>
                   Delete
                 </button>
                 <button
                   className="mx-2 rounded-md border px-4 dark:border-white/50 dark:text-white dark:hover:bg-white/50"
-                  onClick={onNoteSend(i)}
+                  onClick={onNoteSend(id)}
                 >
                   <code className="rounded-md pr-2">t</code>
                   Todoist
