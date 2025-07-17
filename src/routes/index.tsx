@@ -62,6 +62,7 @@ const Index: React.FC = () => {
   useKeyboardShortcut({
     key: (ev) =>
       ["n", "ArrowUp"].includes(ev.key) &&
+      !ev.altKey &&
       document.activeElement !== input.current,
     preventDefault: true,
     callback: () => input.current?.focus(),
@@ -78,6 +79,7 @@ const Index: React.FC = () => {
     key: "ArrowDown",
     preventDefault: true,
     stopPropagation: true,
+    altKey: false,
     callback: () => {
       const id = list[0];
       const note = notes[id];
@@ -233,6 +235,7 @@ const Index: React.FC = () => {
     const onNoteKeydownArrowDown = onKeydown({
       key: "ArrowDown",
       stopPropagation: true,
+      altKey: false,
       callback: () => {
         const nextId = list[index + 1];
         const next = notes[nextId];
@@ -248,6 +251,7 @@ const Index: React.FC = () => {
     const onNoteKeydownArrowUp = onKeydown({
       key: "ArrowUp",
       stopPropagation: true,
+      altKey: false,
       callback: () => {
         const prevId = list[index - 1];
         const prev = notes[prevId];
@@ -260,14 +264,55 @@ const Index: React.FC = () => {
       },
     });
 
+    const onNoteKeydownAltArrowDown = onKeydown({
+      key: "ArrowDown",
+      stopPropagation: true,
+      altKey: true,
+      callback: () => {
+        if (index >= list.length - 1) {
+          return;
+        }
+        setList((prev) => {
+          const newList = [...prev];
+          const temp = newList[index];
+          newList[index] = newList[index + 1];
+          newList[index + 1] = temp;
+          return newList;
+        });
+      },
+    });
+
+    const onNoteKeydownAltArrowUp = onKeydown({
+      key: "ArrowUp",
+      stopPropagation: true,
+      altKey: true,
+      callback: () => {
+        if (index < 1) {
+          return;
+        }
+
+        setList((prev) => {
+          const newList = [...prev];
+          const temp = newList[index - 1];
+          newList[index - 1] = newList[index];
+          newList[index] = temp;
+          return newList;
+        });
+      },
+    });
+
     return composeListeners(
       onNoteKeydownD,
       onNoteKeydownE,
       onNoteKeydownT,
+      onNoteKeydownAltArrowDown,
+      onNoteKeydownAltArrowUp,
       onNoteKeydownArrowDown,
       onNoteKeydownArrowUp,
     );
   };
+
+  console.log("list", list);
 
   return (
     <>
